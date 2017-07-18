@@ -9,7 +9,9 @@ import (
 	"syscall"
 )
 
-func OnInterrupt(fn func(), onExitFunc func()) {
+// OnInterrupt subscribe fn to the os.Signal notifications e.g: os.Interrupt
+// It returns a detach function to unsubscribe from the notifications.
+func OnInterrupt(fn func(), onExitFunc func()) (detach func()) {
 	// deal with control+c,etc
 	signalChan := make(chan os.Signal, 1)
 	// controlling terminal close, daemon not exit
@@ -35,4 +37,9 @@ func OnInterrupt(fn func(), onExitFunc func()) {
 			}
 		}
 	}()
+
+	return func() {
+		signal.Stop(signalChan)
+		close(signalChan)
+	}
 }
